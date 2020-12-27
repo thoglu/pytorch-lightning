@@ -162,11 +162,6 @@ class EarlyStopping(Callback):
 
         self._run_early_stopping_check(trainer, pl_module)
 
-    def on_train_epoch_end(self, trainer, pl_module, outputs):
-        should_check = not trainer.enable_validation and (sum(trainer.num_val_batches) == 0)
-        if should_check and trainer.checkpoint_connector.has_trained:
-            self._run_early_stopping_check(trainer, pl_module)
-
     def _run_early_stopping_check(self, trainer, pl_module):
         """
         Checks whether the early stopping condition is met
