@@ -89,10 +89,6 @@ class EarlyStopping(Callback):
         self.stopped_epoch = 0
         self.mode = mode
         self.warned_result_obj = False
-        self._last_global_step_called = -1
-        # Indicates, if eval results are used as basis for early stopping
-        # It is set to False initially and overwritten, if eval results have been validated
-        self.based_on_eval_results = False
 
         self.__init_monitor_mode()
 
@@ -164,38 +160,11 @@ class EarlyStopping(Callback):
         if trainer.running_sanity_check:
             return
 
-        if self._last_global_step_called == trainer.global_step:
-            return
-
-        self._last_global_step_called = trainer.global_step
         self._run_early_stopping_check(trainer, pl_module)
 
-    def on_validation_epoch_end(self, trainer, pl_module):
-        if trainer.running_sanity_check:
-            return
-
-        if self._validate_condition_metric(trainer.logger_connector.callback_metrics):
-            # turn off early stopping in on_train_epoch_end
-            self.based_on_eval_results = True
-
     def on_train_epoch_end(self, trainer, pl_module, outputs):
-        # disable early stopping in train loop when there's a val loop
-        if self.based_on_eval_results:
-            return
-
-        if self._last_global_step_called == trainer.global_step:
-            return
-
-        self._last_global_step_called = trainer.global_step
-
-        # early stopping can also work in the train loop when there is no val loop
-        should_check_early_stop = False
-
-        # fallback to monitor key in result dict
-        if trainer.logger_connector.callback_metrics.get(self.monitor, None) is not None:
-            should_check_early_stop = True
-
-        if should_check_early_stop:
+        should_check = not trainer.enable_validation and (sum(trainer.num_val_batches) == 0)
+        if should_check and trainer.checkpoint_connector.has_trained:
             self._run_early_stopping_check(trainer, pl_module)
 
     def _run_early_stopping_check(self, trainer, pl_module):
