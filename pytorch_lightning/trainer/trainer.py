@@ -548,7 +548,7 @@ class Trainer(
             # hook
             self.train_loop.on_train_end()
 
-    def run_evaluation(self, test_mode: bool = False, max_batches=None):
+    def run_evaluation(self, test_mode: bool = False, max_batches=None, on_epoch=False):
 
         # used to know if we are logging for val, test + reset cached results
         self.logger_connector.set_stage(test_mode, reset=True)
@@ -560,7 +560,7 @@ class Trainer(
         dataloaders, max_batches = self.evaluation_loop.get_evaluation_dataloaders(max_batches)
 
         # check if we want to skip this evaluation
-        if self.evaluation_loop.should_skip_evaluation(dataloaders, max_batches):
+        if sum(max_batches) == 0:
             return [], []
 
         # ref model
@@ -620,6 +620,10 @@ class Trainer(
 
         # hook
         self.evaluation_loop.on_evaluation_epoch_end()
+
+        # update epoch-level lr_schedulers
+        if on_epoch:
+            self.optimizer_connector.update_learning_rates(interval='epoch')
 
         # hook
         self.evaluation_loop.on_evaluation_end()
