@@ -76,13 +76,10 @@ class TrainingStepVariations(ABC):
         if batch_idx % 2 == 0:
             log_val = log_val.item()
 
-        result = TrainResult(loss_val)
-        result.log('some_val', log_val * log_val, prog_bar=True, logger=False)
-        result.log('train_some_val', log_val * log_val)
+        self.log('some_val', log_val * log_val, prog_bar=True, logger=False)
+        self.log('train_some_val', log_val * log_val)
 
-        self.training_step_called = True
-
-        return result
+        return loss_val
 
     def training_step_end_full_loop_result_obj_dp(self, result):
         """
