@@ -79,4 +79,4 @@ class TrainingStepVariations(ABC):
         self.log('some_val', log_train * log_train, prog_bar=True, logger=False)
         self.log('train_some_val', log_train * log_train)
 
-        return {'loss': loss_train, 'hiddens': self.test_hidden}
+        return loss_train
