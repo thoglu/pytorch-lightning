@@ -123,7 +123,10 @@ class Trainer(
         weights_save_path: Optional[str] = None,
         num_sanity_val_steps: int = 2,
         truncated_bptt_steps: Optional[int] = None,
+
         resume_from_checkpoint: Optional[Union[Path, str]] = None,
+        resume_skip_opti: bool = False,
+
         profiler: Optional[Union[BaseProfiler, bool, str]] = None,
         benchmark: bool = False,
         deterministic: bool = False,
@@ -326,7 +329,7 @@ class Trainer(
         self.debugging_connector = DebuggingConnector(self)
         self.training_tricks_connector = TrainingTricksConnector(self)
         self.profile_connector = ProfilerConnector(self)
-        self.checkpoint_connector = CheckpointConnector(self)
+        self.checkpoint_connector = CheckpointConnector(self,resume_skip_opti=resume_skip_opti)
         self.slurm_connector = SLURMConnector(self)
         self.tuner = Tuner(self)
         self.train_loop = TrainLoop(self, multiple_trainloader_mode)
