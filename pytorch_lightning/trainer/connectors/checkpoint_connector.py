@@ -36,11 +36,13 @@ if _OMEGACONF_AVAILABLE:
 
 class CheckpointConnector:
 
-    def __init__(self, trainer):
+    def __init__(self, trainer, resume_skip_opti=False):
         self.trainer = trainer
 
         # used to validate checkpointing logic
         self.has_trained = False
+
+        self.resume_skip_opti=resume_skip_opti
 
     def restore_weights(self, model: LightningModule):
         """
@@ -161,18 +163,19 @@ class CheckpointConnector:
                 "consider using an end of epoch checkpoint. "
             )
 
-        # restore the optimizers
-        optimizer_states = checkpoint['optimizer_states']
-        for optimizer, opt_state in zip(self.trainer.optimizers, optimizer_states):
-            optimizer.load_state_dict(opt_state)
+        if(self.resume_skip_opti==False):
+            # restore the optimizers
+            optimizer_states = checkpoint['optimizer_states']
+            for optimizer, opt_state in zip(self.trainer.optimizers, optimizer_states):
+                optimizer.load_state_dict(opt_state)
 
-            # move optimizer to GPU 1 weight at a time
-            # avoids OOM
-            if self.trainer.root_gpu is not None:
-                for state in optimizer.state.values():
-                    for k, v in state.items():
-                        if isinstance(v, torch.Tensor):
-                            state[k] = v.cuda(self.trainer.root_gpu)
+                # move optimizer to GPU 1 weight at a time
+                # avoids OOM
+                if self.trainer.root_gpu is not None:
+                    for state in optimizer.state.values():
+                        for k, v in state.items():
+                            if isinstance(v, torch.Tensor):
+                                state[k] = v.cuda(self.trainer.root_gpu)
 
         # restore the lr schedulers
         lr_schedulers = checkpoint['lr_schedulers']
