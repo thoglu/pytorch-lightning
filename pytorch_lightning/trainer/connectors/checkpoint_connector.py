@@ -48,11 +48,9 @@ class CheckpointConnector:
 
         # used to validate checkpointing logic
         self.has_trained = False
-
+        self.resume_skip_opti=resume_skip_opti
 
     def restore_weights(self) -> None:
-
-        self.resume_skip_opti=resume_skip_opti
 
         """
         Attempt to restore a checkpoint (e.g. weights) in this priority:
