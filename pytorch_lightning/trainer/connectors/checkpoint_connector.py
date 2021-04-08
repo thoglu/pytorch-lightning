@@ -43,12 +43,13 @@ if _OMEGACONF_AVAILABLE:
 
 class CheckpointConnector:
 
-    def __init__(self, trainer, resume_skip_opti=False):
+    def __init__(self, trainer, resume_skip_opti=False, resume_skip_scheduler=False):
         self.trainer = trainer
 
         # used to validate checkpointing logic
         self.has_trained = False
         self.resume_skip_opti=resume_skip_opti
+        self.resume_skip_scheduler=resume_skip_scheduler
 
     def restore_weights(self) -> None:
 
@@ -194,9 +195,10 @@ class CheckpointConnector:
                                 state[k] = v.cuda(self.trainer.root_gpu)
 
         # restore the lr schedulers
-        lr_schedulers = checkpoint['lr_schedulers']
-        for scheduler, lrs_state in zip(self.trainer.lr_schedulers, lr_schedulers):
-            scheduler['scheduler'].load_state_dict(lrs_state)
+        if(self.resume_skip_scheduler==False):
+            lr_schedulers = checkpoint['lr_schedulers']
+            for scheduler, lrs_state in zip(self.trainer.lr_schedulers, lr_schedulers):
+                scheduler['scheduler'].load_state_dict(lrs_state)
 
     # ----------------------------------
     # PRIVATE OPS
